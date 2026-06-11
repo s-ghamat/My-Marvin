@@ -1,160 +1,85 @@
-# MY MARVIN — Jenkins Configuration as Code CI/CD Instance
+# My Marvin
 
-MY MARVIN is a Jenkins-based automation project built around **Configuration as Code** and **Job DSL**. It showcases a clean, testable Jenkins setup that can automate anything from small recurring maintenance tasks to full CI/CD production pipelines.
+Jenkins Configuration as Code project for building a reproducible CI/CD automation instance.
 
-This repository is **evaluated entirely through automated tests**, so the Jenkins instance must be reproducible and deterministic.
+The project uses Jenkins LTS, JCasC, and Job DSL to define users, roles, permissions, folders, and jobs entirely as code.
 
----
+## Overview
 
-## Key Principles
+My Marvin is a Jenkins automation project focused on reproducibility and deterministic configuration.
 
-* **Jenkins LTS** only (current Long-Term Support release)
-* **Minimal plugin set** (only what’s required)
-* **Everything as code**
+The Jenkins instance is evaluated through automated tests. All configuration must therefore be declarative, centralized, and version-controlled.
 
-  * All Jenkins configuration in **one** YAML file: `my_marvin.yml`
-  * All Job DSL in **one** Groovy file: `job_dsl.groovy`
+## Principles
 
----
+* Jenkins LTS only
+* Minimal plugin set
+* Configuration as Code
+* Job definitions as code
+* No manual UI configuration
+* Deterministic and testable setup
 
-## Project Requirements
+## Required Files
 
-### Jenkins
+The Jenkins configuration is defined with two files:
 
-* Uses the **current Jenkins LTS** version.
-
-### Plugins (required)
-
-Only the following plugins should be installed:
-
-* `cloudbees-folder`
-* `configuration-as-code`
-* `credentials`
-* `github`
-* `instance-identity`
-* `job-dsl`
-* `script-security`
-* `structs`
-* `role-strategy`
-* `ws-cleanup`
-
----
-
-## Configuration Layout
-
-Your Jenkins configuration must be defined through:
-
-### 1) `my_marvin.yml`
-
-A single JCasC file that defines:
-
-#### Global configuration
-
-* **System message**:
-  `Welcome to the Chocolatine-Powered Marvin Jenkins Instance.`
-* **User sign-up**: Disabled
-
-#### Users
-
-Create the following users (IDs and passwords must match what tests expect):
-
-* Hugo
-* Garance
-* Jeremy
-* Nassim
-
-Passwords must be provided through **environment variables** (see below).
-
-#### Authorization strategy
-
-Use **Role-Based Authorization Strategy** with the following roles:
-
-* `admin`
-* `ape`
-* `gorilla`
-* `assist`
-
-Each role must be assigned the **exact permissions** expected by the project tests.
-
----
-
-### 2) `job_dsl.groovy`
-
-A single Job DSL file that defines all jobs/folders, including:
-
-#### Folder
-
-* **`Tools`** folder (miscellaneous utility jobs)
-
-#### Job: `clone-repository`
-
-* Clones a given Git repository (parameterized repository URL)
-
-#### Job: `SEED`
-
-* A Job DSL seed job that generates other jobs dynamically based on parameters
-
-#### Generated jobs (via SEED)
-
-Each generated job must run these shell steps (in order):
-
-1. `make fclean`
-2. `make`
-3. `make tests_run`
-4. `make clean`
-
----
-
-## Repository Structure
-
-At the root of your Jenkins directory (the directory Jenkins reads from), you must place:
-
-```
+```text
 .
 ├── my_marvin.yml
 └── job_dsl.groovy
 ```
 
-No additional JCasC or DSL files should be used.
+No additional JCasC or DSL files should be required.
 
----
+## Plugins
 
-## Setup Guide
+Only the required plugins should be installed:
 
-### 1) Install and run Jenkins LTS
+```text
+cloudbees-folder
+configuration-as-code
+credentials
+github
+instance-identity
+job-dsl
+script-security
+structs
+role-strategy
+ws-cleanup
+```
 
-Ensure Jenkins is installed and running on the **LTS** line.
+## JCasC Configuration
 
-### 2) Install required plugins
+The `my_marvin.yml` file defines the Jenkins instance configuration.
 
-Verify the plugin list matches exactly the required set:
+It includes:
 
-* cloudbees-folder
-* configuration-as-code
-* credentials
-* github
-* instance-identity
-* job-dsl
-* script-security
-* structs
-* role-strategy
-* ws-cleanup
+* Global Jenkins configuration
+* System message
+* Disabled user sign-up
+* Required users
+* Role-based authorization strategy
+* Role assignments
+* Permissions expected by the project tests
 
-### 3) Add JCasC configuration
+System message:
 
-Place `my_marvin.yml` at the **root of your Jenkins directory**.
+```text
+Welcome to the Chocolatine-Powered Marvin Jenkins Instance.
+```
 
-Also ensure Jenkins is configured to load it (commonly via the environment variable below):
+## Users
 
-* `CASC_JENKINS_CONFIG=/path/to/my_marvin.yml`
+The following users must be created:
 
-### 4) Add the Job DSL script
+```text
+Hugo
+Garance
+Jeremy
+Nassim
+```
 
-Place `job_dsl.groovy` at the **root of your Jenkins directory**.
-
-### 5) Set environment variables for user passwords
-
-Passwords must not be hardcoded. Export the password environment variables expected by the project tests.
+Passwords must be provided through environment variables and must not be hardcoded.
 
 Example:
 
@@ -164,25 +89,118 @@ export USER_GARANCE_PASSWORD="..."
 export USER_JEREMY_PASSWORD="..."
 export USER_NASSIM_PASSWORD="..."
 ```
----
 
-## What the Tests Validate
+## Roles
 
-Automated tests typically verify:
+The authorization strategy uses Role-Based Authorization Strategy.
 
-* Jenkins is running **LTS**
+Required roles:
+
+```text
+admin
+ape
+gorilla
+assist
+```
+
+Each role must include the exact permissions expected by the automated tests.
+
+## Job DSL
+
+The `job_dsl.groovy` file defines the Jenkins jobs and folders.
+
+Required elements:
+
+* `Tools` folder
+* `clone-repository` job
+* `SEED` job
+* Dynamically generated jobs from the seed job
+
+## Jobs
+
+### Tools Folder
+
+Contains utility jobs used by the Jenkins instance.
+
+### clone-repository
+
+Parameterized job that clones a Git repository from a provided URL.
+
+### SEED
+
+Job DSL seed job used to generate project jobs dynamically.
+
+Generated jobs must run the following shell steps in order:
+
+```bash
+make fclean
+make
+make tests_run
+make clean
+```
+
+## Setup
+
+### 1. Install Jenkins LTS
+
+Install and run Jenkins using the current LTS version.
+
+### 2. Install Required Plugins
+
+Install only the required plugin set listed in this README.
+
+### 3. Configure JCasC
+
+Place `my_marvin.yml` at the root of the Jenkins configuration directory.
+
+Set the JCasC path:
+
+```bash
+export CASC_JENKINS_CONFIG=/path/to/my_marvin.yml
+```
+
+### 4. Add Job DSL
+
+Place `job_dsl.groovy` at the same root level as `my_marvin.yml`.
+
+### 5. Set User Passwords
+
+Export the required password variables before starting Jenkins:
+
+```bash
+export USER_HUGO_PASSWORD="..."
+export USER_GARANCE_PASSWORD="..."
+export USER_JEREMY_PASSWORD="..."
+export USER_NASSIM_PASSWORD="..."
+```
+
+## Test Expectations
+
+The automated tests validate:
+
+* Jenkins runs on the LTS line
 * Only required plugins are installed
-* `my_marvin.yml` exists and contains all required Jenkins configuration
-* `job_dsl.groovy` exists and defines all required jobs/folders
-* Users exist with correct IDs and password sources (environment variables)
-* Role-based strategy is enabled with required roles and permissions
-* Jobs behave as expected (clone job, seed job, generated job steps)
-
----
+* `my_marvin.yml` exists
+* `job_dsl.groovy` exists
+* Users are defined correctly
+* Passwords come from environment variables
+* Role-based authorization is configured
+* Required roles and permissions exist
+* Required jobs and folders are generated
+* Generated jobs run the expected build steps
 
 ## Notes
 
-* This project is strict by design: **any UI-driven manual changes will not be considered** and may break reproducibility.
-* Keep everything declarative, idempotent, and centralized in the two required files.
+This project is strict by design.
 
+Manual changes made through the Jenkins UI are not considered reliable and may break reproducibility. All configuration should remain declarative, idempotent, and centralized in the required files.
 
+## Academic Context
+
+Project: My Marvin
+Focus: Jenkins, CI/CD, Configuration as Code, Job DSL
+School: Epitech
+
+## Author
+
+Setayesh Ghamat
